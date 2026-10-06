@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+<defs><radialGradient id="bg"><stop stop-color="#24568A"/><stop offset="1" stop-color="#0D1F3C"/></radialGradient></defs>
+<rect width="800" height="500" fill="url(#bg)"/><g fill="none" stroke="#A8CBEC" stroke-width="2"><path d="M200 250h155m90 0h155"/><path d="M400 205v-75h200v75" stroke-dasharray="6 7"/></g>
+<g fill="#0D1F3C" stroke="#A8CBEC" stroke-width="2"><rect x="120" y="195" width="125" height="110" rx="20"/><rect x="338" y="195" width="125" height="110" rx="20"/><rect x="556" y="195" width="125" height="110" rx="20" stroke="#D8B66A"/></g>
+<g font-family="Arial,sans-serif" font-size="19" text-anchor="middle" fill="#E8EDF5"><text x="183" y="257">INPUT</text><text x="400" y="257">AI</text><text x="618" y="257" fill="#F0DDAA">ACTION</text></g><text x="52" y="60" font-family="Arial,sans-serif" font-size="12" letter-spacing="3" fill="#A8CBEC">IDEAS INTO WORKFLOWS</text><text x="52" y="460" font-family="Arial,sans-serif" font-size="11" letter-spacing="2" fill="#A8CBEC">PROJECT ILLUSTRATION</text>
+</svg>

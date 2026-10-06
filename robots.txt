@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /site/
+Disallow: /scripts/
+Sitemap: https://motunrayoakinsete.com/sitemap.xml

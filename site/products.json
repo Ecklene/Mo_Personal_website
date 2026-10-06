@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Make.com Workflow Systems",
+    "description": "Productised automation systems for social media content, lead generation and AI reception workflows.",
+    "image": "/assets/workflow-systems.svg",
+    "imageAlt": "Project illustration showing connected automation steps",
+    "category": "AI automation",
+    "url": "/portfolio/#workflow-systems"
+  },
+  {
+    "name": "Photography Prompt Library",
+    "description": "A searchable AI photography prompt library across ten industry packs, built around Nigerian and African subjects.",
+    "image": "/assets/prompt-library.svg",
+    "imageAlt": "Project illustration representing a collection of photography prompts",
+    "category": "AI tools & resources",
+    "url": "/portfolio/#prompt-library"
+  }
+]

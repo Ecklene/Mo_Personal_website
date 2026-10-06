@@ -1,0 +1,7 @@
+.git/
+site/
+scripts/
+output/
+README.md
+SEO_ROADMAP.md
+__pycache__/

@@ -7,7 +7,7 @@ import re
 from html import escape
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE = 'https://motunrayoakinsete.com'
+BASE = 'https://www.motunrayoakinsete.com'
 source = (ROOT / 'site/template.html').read_text()
 assets = ROOT / 'assets'
 assets.mkdir(exist_ok=True)

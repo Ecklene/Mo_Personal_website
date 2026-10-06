@@ -34,7 +34,7 @@ qualitative opinions, not measured search performance.
 - Publish reviewed articles before creating an Insights index.
 - Enquiries currently open an email draft with validated fields. Visitors must send
   that draft in their email app. A backend submission service is a future improvement.
-- Confirm the canonical domain (`https://motunrayoakinsete.com`) and host. Review
+- Canonical URLs use the verified production domain (`https://www.motunrayoakinsete.com`). Review
   existing indexed URLs and add redirects if replacing previously published paths.
 - Complete visual/mobile QA, accessibility, PageSpeed and structured-data validation.
   Search rankings and AI citations are not guaranteed.

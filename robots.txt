@@ -2,4 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /site/
 Disallow: /scripts/
+Disallow: /studio/
+Disallow: /api/editor
+Disallow: /api/automation
+Disallow: /api/linkedin
+Disallow: /api/pinterest
 Sitemap: https://www.motunrayoakinsete.com/sitemap.xml

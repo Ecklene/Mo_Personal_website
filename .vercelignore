@@ -1,7 +1,11 @@
 .git/
 site/
-scripts/
+scripts/build_site.py
 output/
 README.md
+BLOG_SETUP.md
 SEO_ROADMAP.md
 __pycache__/
+tests/
+backend/
+.env*

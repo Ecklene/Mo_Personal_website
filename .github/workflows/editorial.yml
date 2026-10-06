@@ -1,0 +1,28 @@
+name: Three weekly editorial drafts
+on:
+  schedule:
+    - cron: '0 8 * * 1,3,5'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: editorial-generation
+  cancel-in-progress: false
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - name: Generate one researched draft and send the review email
+        env:
+          BLOG_ENDPOINT: ${{ vars.BLOG_ENDPOINT }}
+          BLOG_CRON_SECRET: ${{ secrets.BLOG_CRON_SECRET }}
+        run: |
+          if [ -z "$BLOG_CRON_SECRET" ] || [ -z "$BLOG_ENDPOINT" ]; then
+            echo "Automation is not activated. Configure BLOG_ENDPOINT and BLOG_CRON_SECRET first."
+            exit 0
+          fi
+          curl --fail-with-body --silent --show-error \
+            --max-time 290 --retry 2 --retry-delay 30 \
+            -H "Authorization: Bearer $BLOG_CRON_SECRET" \
+            "$BLOG_ENDPOINT"

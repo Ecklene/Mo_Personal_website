@@ -22,12 +22,14 @@ def image(match):
 source = re.sub(r'data:image/(jpeg|png|webp);base64,([^"\s]+)', image, source)
 css = re.search(r'<style>(.*?)</style>', source, re.S)[1]
 css += '\n' + (ROOT / 'site/redesign.css').read_text()
+css += '\n' + (ROOT / 'site/blog.css').read_text()
 (assets / 'site.css').write_text(css + '\n.faq-list{max-width:760px}.faq-list details{padding:20px 0;border-bottom:1px solid var(--border)}.faq-list summary{cursor:pointer;font-weight:500}.faq-list p{margin-top:12px;line-height:1.8;color:var(--muted)}\n')
 js = re.search(r'<script>(.*?)</script>', source, re.S)[1]
 js = js[js.index('function filterPortfolio'):]
 js = re.sub(r'function handleSubmit\(\) \{.*?\n\}', '', js, flags=re.S)
 js += '\n' + (ROOT / 'site/interactions.js').read_text()
 (assets / 'site.js').write_text(js)
+(assets / 'studio.js').write_text((ROOT / 'site/studio.js').read_text())
 
 routes = {
     'home': ('/', 'AI Consultant & Trainer in Nigeria | Motunrayo Akinsete', 'AI consulting, corporate training and speaking with Motunrayo Akinsete, a Google DeepMind Scholar and AI researcher based in Nigeria.'),
@@ -41,6 +43,8 @@ routes = {
     'corporate': ('/corporate-ai-training-nigeria/', 'Corporate AI Training in Nigeria | Motunrayo Akinsete', 'Practical AI workshops for businesses, government organisations and institutions. Build your team’s skills with Motunrayo Akinsete.'),
     'training': ('/ai-training-nigeria/', 'AI Training in Nigeria for Professionals | Motunrayo Akinsete', 'Focused one-on-one AI sessions for founders, researchers and professionals with Motunrayo Akinsete.'),
     'products': ('/building-products/', 'Building AI Products & Product Management | Motunrayo Akinsete', 'Explore Motunrayo Akinsete’s approach to building useful AI products, AI product management and research-led product decisions.'),
+    'blog': ('/blog/', 'AI, Cloud & Technology Blog | Motunrayo Akinsete', 'Ideas, research and practical perspectives on AI, cloud computing, cybersecurity, technology and life from Motunrayo Akinsete.'),
+    'studio': ('/studio/', 'Mo Editorial | Private Blog Studio', 'Private writing, review and publishing workspace.'),
 }
 
 def links(html):
@@ -56,6 +60,7 @@ def links(html):
 nav = links(re.search(r'<nav.*?</nav>', source, re.S)[0])
 nav = nav.replace('<div class="nav-links">', '<button class="nav-toggle" aria-expanded="false" aria-controls="navigation-links" aria-label="Open navigation"><span></span><span></span></button><div class="nav-links" id="navigation-links">')
 nav = nav.replace('<a href="/research/"', '<a href="/building-products/" id="nav-products">Products</a><a href="/research/"').replace('id="nav-research">Research', 'id="nav-research">AI Research')
+nav = nav.replace('<a href="/ai-speaker-nigeria/"', '<a href="/blog/" id="nav-blog">Blog</a><a href="/ai-speaker-nigeria/"')
 pages = {}
 for key in list(routes)[:7]:
     start = source.index('<div class="page' + (' active' if key == 'home' else '') + '" id="page-' + key + '">')
@@ -93,6 +98,10 @@ service_links = '<section class="section cloud"><h2 class="sec-title">Explore AI
 pages['services'] = pages['services'].replace('  <!-- CONSULT -->', service_links + '\n  <!-- CONSULT -->')
 pages['home'] = (ROOT / 'site/home.html').read_text()
 pages['products'] = (ROOT / 'site/products.html').read_text()
+pages['blog'] = (ROOT / 'site/blog.html').read_text()
+pages['studio'] = (ROOT / 'site/studio.html').read_text().rsplit('</div>', 1)[0] + '<footer><a class="footer-brand" href="/">Motunrayo Akinsete</a><span class="footer-sign">Love and Light, Mo</span></footer></div>'
+# The generated shell is shared by server-rendered article pages.
+(ROOT / 'lib/site-shell.json').write_text(json.dumps({'nav': re.sub(r' class="active"', '', nav), 'footer': '<footer><a class="footer-brand" href="/">Motunrayo Akinsete</a><div class="footer-links"><a href="/blog/">Blog</a><a href="/about/">About</a><a href="/research/">AI Research</a><a href="/book/">Contact</a></div><span class="footer-sign">Love and Light, Mo</span></footer>'}, ensure_ascii=False))
 products = json.loads((ROOT / 'site/products.json').read_text())
 product_cards = ''.join('<a class="selected-card" href="' + escape(p['url'], quote=True) + '" data-reveal><img class="product-preview" src="' + escape(p['image'], quote=True) + '" alt="' + escape(p['imageAlt'], quote=True) + '" width="800" height="500" loading="lazy"><div class="selected-meta"><span>' + escape(p['category']) + '</span><span aria-hidden="true">↗</span></div><h3>' + escape(p['name']) + '</h3><p>' + escape(p['description']) + '</p><span class="product-view-link">View project <span aria-hidden="true">↗</span></span></a>' for p in products)
 pages['home'] = pages['home'].replace('<!-- PRODUCT_SHOWCASE -->', '<div class="selected-grid product-showcase">' + product_cards + '</div>')
@@ -117,7 +126,9 @@ for key, (route, title, description) in routes.items():
     path = ROOT / route.strip('/') / 'index.html' if route != '/' else ROOT / 'index.html'
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(html)
+    if key == 'studio':
+        path.write_text(html.replace('<title>', '<meta name="robots" content="noindex,nofollow"><title>', 1))
 
-(ROOT / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /site/\nDisallow: /scripts/\nSitemap: ' + BASE + '/sitemap.xml\n')
-(ROOT / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join('  <url><loc>' + BASE + route + '</loc></url>\n' for route, _, _ in routes.values()) + '</urlset>\n')
+(ROOT / 'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /site/\nDisallow: /scripts/\nDisallow: /studio/\nDisallow: /api/editor\nDisallow: /api/automation\nDisallow: /api/linkedin\nDisallow: /api/pinterest\nSitemap: ' + BASE + '/sitemap.xml\n')
+(ROOT / 'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join('  <url><loc>' + BASE + route + '</loc></url>\n' for key, (route, _, _) in routes.items() if key != 'studio') + '</urlset>\n')
 print('Built', len(routes), 'static pages with shared assets and sitemap.')

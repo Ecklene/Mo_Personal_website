@@ -81,3 +81,21 @@ function handleSubmit() {
   window.location.href = 'mailto:hello@motunrayoakinsete.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
   document.querySelector('.enquiry-status').textContent = 'Your email draft is ready to open. Please send it from your email app. If nothing opens, email hello@motunrayoakinsete.com directly.';
 }
+
+const homepagePosts = document.getElementById('home-blog-posts');
+if (homepagePosts) {
+  fetch('/api/public-blog?format=json').then(response => response.ok ? response.json() : null).then(data => {
+    if (!data?.posts?.length) return;
+    const cards = data.posts.map(post => {
+      const card = document.createElement('a'); card.className = 'blog-card'; card.href = '/blog/' + post.slug + '/';
+      if (post.image) { const image = document.createElement('img'); image.src = post.image; image.alt = post.alt || ''; image.loading = 'lazy'; image.width = 1536; image.height = 1024; card.append(image); }
+      const body = document.createElement('div'); body.className = 'blog-card-body';
+      const category = document.createElement('p'); category.className = 'blog-category'; category.textContent = post.category;
+      const title = document.createElement('h3'); title.textContent = post.title;
+      const description = document.createElement('p'); description.textContent = post.description;
+      const more = document.createElement('span'); more.textContent = 'Read the article ↗';
+      body.append(category,title,description,more); card.append(body); return card;
+    });
+    homepagePosts.replaceChildren(...cards);
+  }).catch(() => {});
+}

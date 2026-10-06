@@ -1,7 +1,23 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "",
-  "outputDirectory": ".",
-  "trailingSlash": true
+  "buildCommand": "node scripts/prepare-static.mjs",
+  "outputDirectory": "public",
+  "trailingSlash": true,
+  "functions": {
+    "api/editor.js": { "maxDuration": 300, "includeFiles": "lib/site-shell.json" },
+    "api/automation.js": { "maxDuration": 300, "includeFiles": "lib/site-shell.json" },
+    "api/public-blog.js": { "includeFiles": "lib/site-shell.json" },
+    "api/feed.js": { "includeFiles": "sitemap.xml" }
+  },
+  "rewrites": [
+    { "source": "/blog/", "destination": "/api/public-blog" },
+    { "source": "/blog/:slug/", "destination": "/api/public-blog?slug=:slug" },
+    { "source": "/sitemap.xml", "destination": "/api/feed?type=sitemap" },
+    { "source": "/rss.xml", "destination": "/api/feed?type=rss" }
+  ],
+  "headers": [
+    { "source": "/studio/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }, { "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/api/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+  ]
 }

@@ -9,6 +9,7 @@ This repository contains the personal website for **Motunrayo Akinsete**.
 Build the pages, then run the local server (Node 22 or newer):
 
 ```bash
+npm ci
 npm run build
 npm run dev
 ```
@@ -33,7 +34,7 @@ with `scripts/prepare-static.mjs`, using `vercel.json`.
 Always rebuild before committing source changes. The contact page opens an
 email draft; visitors must send it in their email app.
 
-The public `/blog/` and article pages render from Supabase on the server.
+The public `/blog/` and article pages render from Neon (or Supabase) on the server.
 The private `/studio/` supports writing, image uploads, AI draft generation,
 email review, approval and LinkedIn/Pinterest sharing. See [BLOG_SETUP.md](BLOG_SETUP.md)
 for Resend, database, AI, social account and weekly schedule setup. Automation

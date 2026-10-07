@@ -5,6 +5,7 @@ import { db, getPost, savePost, uploadImage } from '../lib/db.js';
 import { validateChanges, publishable, exportMarkdown } from '../lib/content.js';
 import { postPage, exportHtml } from '../lib/render.js';
 import { generate } from '../lib/generate.js';
+import {summarize} from '../lib/ai.js';
 import { sendDraft } from '../lib/email.js';
 import { shareLinkedIn } from '../lib/linkedin.js';
 import { pinterestBoards, selectPinterestBoard, publishPin } from '../lib/pinterest.js';
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
     }
     if (action === 'generate') {
       method(req, 'POST'); requireAdmin(req);
-      let options = { category: data.category, context: typeof data.context === 'string' ? data.context : '' };
+      let options = { category: data.category, context: typeof data.context === 'string' ? data.context : '', provider:data.provider };
       if (data.retryId) {
         const post = await getPost(validId(data.retryId)); if (!post || post.status === 'published') throw Object.assign(new Error('No unfinished draft to retry.'), { status: 400 });
         const job = (await db(`blog_jobs?post_id=eq.${post.id}&limit=1`))[0];
@@ -72,6 +73,7 @@ export default async function handler(req, res) {
     editable(post, auth);
     if (!data.version) throw Object.assign(new Error('Reload the draft before saving.'), { status: 409 });
     if (action === 'save') return json(res, 200, { post: await savePost(id, validateChanges(data.changes || {}), data.version) });
+    if (action === 'summarize') return json(res,200,{post:await savePost(id,await summarize(post,data.provider),data.version)});
     if (action === 'approve') { publishable(post); return json(res, 200, { post: await savePost(id, { status: 'published', published_at: post.published_at || new Date().toISOString(), rejection_note: '' }, data.version) }); }
     if (action === 'reject') return json(res, 200, { post: await savePost(id, { status: 'rejected', rejection_note: String(data.note || '').slice(0, 5000) }, data.version) });
     if (action === 'upload') {

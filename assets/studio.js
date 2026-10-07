@@ -6,7 +6,7 @@ function status(message, error = false) { $('studio-status').textContent = messa
 async function api(action, data, options = {}) {
   const headers = token ? { Authorization: 'Bearer ' + token } : {};
   const query = new URLSearchParams({ action, ...(options.params || {}) });
-  const response = await fetch('/api/editor?' + query, data ? { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...data }) } : { headers });
+  const response = await fetch('/api/editor/?' + query, data ? { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...data }) } : { headers });
   if (!response.ok) { let message = 'The request could not be completed.'; try { message = (await response.json()).error || message; } catch {} throw new Error(message); }
   return options.raw ? response : response.json();
 }
@@ -17,16 +17,17 @@ async function run(task) {
   finally { busy = false; document.body.classList.remove('studio-busy'); }
 }
 function changes() {
-  return { title: $('post-title').value, slug: $('post-slug').value, category: $('post-category').value, description: $('post-description').value, body: $('post-body').value, sources: $('post-sources').value.split('\n').filter(line => line.trim()).map(line => { const separator = line.indexOf('|'); if (separator < 1) throw new Error('Each source needs a title and URL separated by |.'); return { title: line.slice(0, separator).trim(), url: line.slice(separator + 1).trim() }; }) };
+  return { title: $('post-title').value, slug: $('post-slug').value, category: $('post-category').value, description: $('post-description').value, social_excerpt:$('post-excerpt').value, body: $('post-body').value, sources: $('post-sources').value.split('\n').filter(line => line.trim()).map(line => { const separator = line.indexOf('|'); if (separator < 1) throw new Error('Each source needs a title and URL separated by |.'); return { title: line.slice(0, separator).trim(), url: line.slice(separator + 1).trim() }; }) };
 }
 function updateWords() { $('word-count').textContent = $('post-body').value.split(/\s+/).filter(Boolean).length + ' words'; }
 function renderPost(post) {
   currentPost = post; $('editor-empty').hidden = true; $('editor-content').hidden = false;
   for (const [field, name] of Object.entries({ 'post-title': 'title', 'post-slug': 'slug', 'post-category': 'category', 'post-description': 'description', 'post-body': 'body' })) $(field).value = post[name];
   $('post-sources').value = post.sources.map(source => `${source.title} | ${source.url}`).join('\n');
+  $('post-excerpt').value=post.social_excerpt||'';
   $('post-state').textContent = post.status; $('editorial-note').textContent = post.editorial_note || post.rejection_note; $('editorial-note').hidden = !$('editorial-note').textContent;
   const published = post.status === 'published';
-  for (const id of ['post-title','post-slug','post-category','post-description','post-body','post-sources','save-post','approve-post','reject-post']) $(id).disabled = published;
+  for (const id of ['post-title','post-slug','post-category','post-description','post-excerpt','summarize-post','post-body','post-sources','save-post','approve-post','reject-post']) $(id).disabled = published;
   $('unpublish-post').hidden = !published || !owner;
   $('live-post-link').hidden = !published; $('live-post-link').href = '/blog/' + post.slug + '/';
   $('email-draft').hidden = !owner || published;
@@ -82,7 +83,7 @@ async function start() {
     $('studio-login').hidden = true; $('studio-workspace').hidden = false; $('studio-sidebar').hidden = !owner;
     $('studio-workspace').classList.toggle('review-only', !owner);
     if (owner) {
-      const config = session.configuration; $('integration-status').textContent = `Writing: ${config.generation ? 'ready' : 'needs setup'} · Email: ${config.email ? 'ready' : 'needs setup'} · Schedule: ${session.automationEnabled ? 'enabled' : 'not activated'}`;
+      const config = session.configuration; $('integration-status').textContent = `Writing: ${config.generation ? 'ready' : 'needs setup'} · Images: ${config.images ? 'ready' : 'needs setup'} · Email: ${config.email ? 'ready' : 'needs setup'} · Schedule: ${session.automationEnabled ? 'enabled' : 'not activated'}`;
       $('connect-linkedin').textContent = session.linkedinConnected ? 'Reconnect LinkedIn ↗' : 'Connect LinkedIn ↗';
       $('connect-pinterest').textContent = session.pinterestConnected ? 'Reconnect Pinterest ↗' : 'Connect Pinterest ↗';
       if (session.pinterestConnected) {
@@ -99,9 +100,10 @@ async function start() {
 $('studio-login').addEventListener('submit', event => { event.preventDefault(); run(async () => { token = ''; await api('login', { password: $('owner-password').value }); $('owner-password').value = ''; await start(); status('Signed in.'); }); });
 $('studio-logout').addEventListener('click', () => run(async () => { await api('logout', {}); location.reload(); }));
 $('new-personal').addEventListener('click', () => run(async () => { const result = await api('create', { category: 'Personal' }); renderPost(result.post); await list(); status('Your new draft is ready.'); }));
-$('generate-draft').addEventListener('click', () => run(async () => { status('Researching and writing your draft, then creating three images. This can take a few minutes.'); const result = await api('generate', { category: $('generate-category').value, context: $('generate-notes').value }); if (result.post) { renderPost(result.post); await list(); status(result.emailed ? 'Draft saved and emailed for review.' : 'Draft saved. Configure email delivery to receive it in your inbox.'); } else status(result.message); }));
+$('generate-draft').addEventListener('click', () => run(async () => { status('Researching and writing your draft, then creating three images. This can take a few minutes.'); const result = await api('generate', { category: $('generate-category').value, context: $('generate-notes').value, provider:$('generate-provider').value }); if (result.post) { renderPost(result.post); await list(); status(result.emailed ? 'Draft saved and emailed for review.' : 'Draft saved. Configure email delivery to receive it in your inbox.'); } else status(result.message); }));
 $('retry-draft').addEventListener('click', () => run(async () => { status('Finishing the images and email for this draft…'); const result = await api('generate', { retryId: currentPost.id }); if (result.post) renderPost(result.post); status(result.message || 'Generation complete.'); }));
 $('save-post').addEventListener('click', () => run(async () => { await save(); await list(); status('Draft saved.'); }));
+$('summarize-post').addEventListener('click',()=>run(async()=>{await save();status('Creating a summary for your review…');const result=await api('summarize',{id:currentPost.id,version:currentPost.updated_at,provider:$('summary-provider').value});renderPost(result.post);status('Summary and search description saved. Review and edit them before approving.');}));
 $('approve-post').addEventListener('click', () => run(async () => { await save(); const result = await api('approve', { id: currentPost.id, version: currentPost.updated_at }); renderPost(result.post); await list(); status('Approved and published on your website.'); }));
 $('reject-post').addEventListener('click', () => run(async () => { await save(); const note = prompt('Optional note: what should change in this draft?'); if (note === null) return; const result = await api('reject', { id: currentPost.id, version: currentPost.updated_at, note }); renderPost(result.post); await list(); status('Draft rejected. It remains private.'); }));
 $('unpublish-post').addEventListener('click', () => run(async () => { const result = await api('unpublish', { id: currentPost.id, version: currentPost.updated_at }); renderPost(result.post); await list(); status('Unpublished. Edit and approve again when ready.'); }));

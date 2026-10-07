@@ -7,7 +7,7 @@ export default async function handler(req,res) {
   res.setHeader('Cache-Control','no-store'); res.setHeader('X-Robots-Tag','noindex,nofollow');
   try {
     if (req.method !== 'GET') throw Object.assign(new Error('Method not allowed'), { status: 405 });
-    const params = query(req), redirectUri = `${siteUrl()}/api/pinterest`, secure = new URL(siteUrl()).protocol === 'https:' ? 'Secure; ' : '';
+    const params = query(req), redirectUri = `${siteUrl()}/api/pinterest/`, secure = new URL(siteUrl()).protocol === 'https:' ? 'Secure; ' : '';
     if (params.get('action') === 'connect') {
       requireAdmin(req); const state = sign({ kind: 'pinterest-oauth', nonce: randomUUID() },600);
       res.setHeader('Set-Cookie',`mo_pinterest_state=${state}; HttpOnly; ${secure}SameSite=Lax; Path=/api/pinterest; Max-Age=600`);

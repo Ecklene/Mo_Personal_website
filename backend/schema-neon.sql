@@ -1,4 +1,5 @@
--- Run once in the Supabase SQL editor. All application access is server-side.
+-- Run in the Neon SQL editor using the same owner role as DATABASE_URL.
+-- Tables remain accessible only through the authenticated server backend.
 create table if not exists public.blog_posts (
   id uuid primary key,
   slug text not null unique check (slug ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
@@ -50,8 +51,8 @@ alter table public.blog_posts enable row level security;
 alter table public.blog_jobs enable row level security;
 alter table public.blog_login_limits enable row level security;
 alter table public.blog_integrations enable row level security;
-revoke all on public.blog_posts,public.blog_jobs,public.blog_login_limits,public.blog_integrations from anon, authenticated;
-grant all on public.blog_posts,public.blog_jobs,public.blog_login_limits,public.blog_integrations to service_role;
+revoke all on public.blog_posts,public.blog_jobs,public.blog_login_limits,public.blog_integrations from public;
+
 
 create or replace function public.blog_claim_job(p_slot text,p_post_id uuid)
 returns setof public.blog_jobs language sql security definer set search_path=public as $$
@@ -68,10 +69,6 @@ returns integer language sql security definer set search_path=public as $$
     expires_at=case when blog_login_limits.expires_at<now() then now()+interval '15 minutes' else blog_login_limits.expires_at end
   returning attempts;
 $$;
-revoke all on function public.blog_claim_job(text,uuid),public.blog_login_attempt(text) from public,anon,authenticated;
-grant execute on function public.blog_claim_job(text,uuid),public.blog_login_attempt(text) to service_role;
-insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
-values ('blog-images','blog-images',true,5242880,array['image/png','image/jpeg','image/webp'])
-on conflict(id) do nothing;
--- Public image reads are intentional. No anonymous upload/update policy is granted.
--- Keep SQL files and every secret key out of the public deployment.
+revoke all on function public.blog_claim_job(text,uuid),public.blog_login_attempt(text) from public;
+-- The creating owner retains permission to call the functions and bypass table RLS.
+-- Do not expose DATABASE_URL in browser code. Use Vercel environment variables.

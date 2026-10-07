@@ -3,6 +3,7 @@ export function post(overrides = {}) {
     id: '11111111-1111-4111-8111-111111111111', slug: 'a-useful-ai-question',
     title: 'A useful AI question', description: 'A practical explanation of an important question about AI systems and how to evaluate their results carefully.',
     category: 'AI Research', body: `## Start with the question\n\n${'Useful evidence helps people make thoughtful decisions. '.repeat(80)}\n\n[[image:1]]\n\n## Look at the evidence\n\nA second section with **useful examples**.\n\n[[image:2]]`,
+    social_excerpt:'A practical discussion of asking better questions about AI and evaluating evidence before making product decisions.',
     images: [0,1,2].map(i => ({ url: `https://db.example/storage/v1/object/public/blog-images/example/${i}.webp`, prompt: `Conceptual illustration ${i}`, alt: `Illustration ${i}`, caption: `Caption ${i}`, generated: true })),
     sources: [{title:'NIST research', url:'https://nist.gov/research'}, {title:'Research paper', url:'https://arxiv.org/abs/1234'}],
     status: 'draft', ai_generated: true, review_nonce: '22222222-2222-4222-8222-222222222222',

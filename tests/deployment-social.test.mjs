@@ -10,9 +10,10 @@ env();
 test('Deployment contains public pages and assets, excluding server source and configuration',async()=>{
   execFileSync(process.execPath,['scripts/prepare-static.mjs']);
   const files=await readdir('public',{recursive:true});
-  assert.ok(files.includes('index.html'));assert.ok(files.includes('studio/index.html'));assert.ok(files.includes('blog/index.html'));assert.ok(files.includes('assets/studio.js'));
+  assert.ok(files.includes('index.html'));assert.ok(files.includes('studio/index.html'));assert.ok(files.includes('assets/studio.js'));
+  assert.ok(!files.includes('blog/index.html'));assert.ok(!files.includes('sitemap.xml'));
   assert.ok(files.every(name=>!/(^|\/)(lib|api|backend|site|tests|scripts)(\/|$)|(^|\/)(\.env|BLOG_SETUP|package\.json)/.test(name)));
-  assert.equal(files.filter(name=>name.endsWith('index.html')).length,13);
+  assert.equal(files.filter(name=>name.endsWith('index.html')).length,12);
 });
 test('LinkedIn and Pinterest share approved articles and persist duplicate protection',async()=>{
   const p=post({status:'published',published_at:new Date().toISOString()}),state=fakeDatabase([p]),original=global.fetch;const providers=[];

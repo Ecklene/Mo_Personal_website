@@ -12,7 +12,7 @@ test('Failed images retain the draft and retry only missing images before one em
     assert.equal(url.hostname,'api.openai.com');const data=JSON.parse(options.body);
     if(url.pathname.endsWith('/images/generations')) { images++;if(failSecond&&images===2) return response({},500);return response({data:[{b64_json:Buffer.from('image').toString('base64')}]}); }
     if(data.tools){researches++;assert.equal(data.tool_choice,'required');return response({output:[{type:'message',content:[{type:'output_text',text:'Two primary sources establish a useful development.',annotations:[{type:'url_citation',url:'https://nist.gov/research'},{type:'url_citation',url:'https://arxiv.org/paper'}]}]}]});}
-    writes++;const p=post();return response({output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({title:p.title,slug:p.slug,description:p.description,body:p.body,editorial_note:p.editorial_note,images:p.images.map(({prompt,alt,caption})=>({prompt,alt,caption}))})}]}]});
+    writes++;const p=post();return response({output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({title:p.title,slug:p.slug,description:p.description,social_excerpt:p.social_excerpt,body:p.body,editorial_note:p.editorial_note,images:p.images.map(({prompt,alt,caption})=>({prompt,alt,caption}))})}]}]});
   };
   try{
     await assert.rejects(generate({category:'AI Research',slot:'scheduled-test'}));assert.equal(state.posts.length,1);assert.equal(state.posts[0].status,'draft');assert.equal(state.posts[0].images.filter(i=>i.url).length,2);assert.equal(state.jobs[0].state,'failed');assert.equal(emails,0);

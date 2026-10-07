@@ -7,14 +7,27 @@ published articles. Unpublished drafts are never included in public pages or fee
 
 ## Connect the required services
 
-1. Create a Supabase project. Run `backend/schema.sql` in its SQL editor. This
-   creates private post/job tables and a public image bucket with no anonymous
-   upload access. In Vercel Environment Variables, set `SUPABASE_URL` and
-   `SUPABASE_SECRET_KEY` from Supabase’s Connect dialog. Use its server secret key,
-   never a publishable/browser key.
+1. Create a Neon PostgreSQL project and run `backend/schema-neon.sql` in its SQL
+   editor, using the same owner role as the connection string. Add the pooled
+   connection string as `DATABASE_URL` in Vercel; keep it server-side. Create a
+   **public** Vercel Blob store in your project’s Storage tab and connect it to
+   production. Vercel adds `BLOB_READ_WRITE_TOKEN` for server-side image uploads.
+   This stores posts privately in Neon and blog illustrations in Blob. Do not
+   create an anonymous database endpoint or expose the connection string.
+
+   Supabase remains an alternative: leave DATABASE_URL unset, run `backend/schema.sql`
+   in Supabase, and set `SUPABASE_URL` and `SUPABASE_SECRET_KEY`. Only configure one
+   database for this site. DATABASE_URL takes priority when present. Switching
+   databases after publishing requires migrating posts, jobs and integration rows;
+   changing an environment variable alone does not move existing data.
 2. Add an OpenAI API key with API billing enabled as `OPENAI_API_KEY`. ChatGPT
    subscriptions do not provide API credits. Defaults are `gpt-4.1` for research
-   and writing and `gpt-image-1.5` for illustrations; both are configurable.
+   and writing and `gpt-image-1.5` for illustrations; both are configurable. For Claude draft writing and summaries, add
+   `ANTHROPIC_API_KEY` and optionally `ANTHROPIC_TEXT_MODEL` (default
+   `claude-sonnet-4-6`). Choose the writer in the studio; set `TEXT_PROVIDER=claude`
+   for scheduled drafts or leave it `openai`. OpenAI is still required for web
+   research and generated images. Claude-only summaries work for manually written
+   articles without an OpenAI key. API billing is separate from consumer chat plans.
 3. In Resend, verify a sending domain with the DNS records it provides. Add
    `RESEND_API_KEY`, a verified `EMAIL_FROM` sender and your private `REVIEW_EMAIL`
    to Vercel. The recipient email is intentionally not stored in this public repo.
@@ -28,7 +41,7 @@ published articles. Unpublished drafts are never included in public pages or fee
    Review accuracy and tone before publishing; no automatic draft is public.
 
 Never send API keys in chat or put real values in `.env.example`. For local work,
-copy that file to `.env.local` (ignored by git), build, then run `npm run dev`.
+copy that file to `.env.local` (ignored by git), run `npm ci`, build, then run `npm run dev`.
 
 ## Activate three drafts per week
 
@@ -41,7 +54,7 @@ and can be written or generated manually in the studio.
 After a successful test, set `BLOG_AUTOMATION_ENABLED=true` in Vercel and redeploy.
 In GitHub repository Settings → Secrets and variables → Actions, add:
 
-- Variable `BLOG_ENDPOINT`: `https://www.motunrayoakinsete.com/api/automation`
+- Variable `BLOG_ENDPOINT`: `https://www.motunrayoakinsete.com/api/automation/`
 - Secret `BLOG_CRON_SECRET`: the same value as Vercel’s `CRON_SECRET`
 
 Enable Actions if needed. Manual workflow runs only generate on scheduled days;
@@ -73,6 +86,12 @@ Supported Markdown: headings, paragraphs, bold/italic, lists, links, quotes and
 code blocks. Raw HTML is escaped. Use a short title and a specific 140–160-character
 search description. The editor is designed for one owner; it is not a multi-user CMS.
 
+The Create article summary button lets you select OpenAI or Claude. It saves an
+editable search description and article/social summary while retaining the full
+article body. Review both before approving. The summary appears beneath the
+article title and is used in LinkedIn sharing. The weekly writer creates these
+summaries along with the draft. Summaries cannot publish a post by themselves.
+
 The public pages render article text on the server, with BlogPosting/Breadcrumb
 data, canonical URLs, social image metadata, readable author details and related
 links. `/sitemap.xml` adds published articles dynamically; `/rss.xml` contains the
@@ -83,7 +102,7 @@ Publishing useful original articles can help discovery; rankings are not guarant
 
 Create an app in the LinkedIn Developer Portal and enable Share on LinkedIn and
 Sign In with LinkedIn using OpenID Connect. Add this exact callback URL:
-`https://www.motunrayoakinsete.com/api/linkedin`. Set `LINKEDIN_CLIENT_ID` and
+`https://www.motunrayoakinsete.com/api/linkedin/`. Set `LINKEDIN_CLIENT_ID` and
 `LINKEDIN_CLIENT_SECRET` in Vercel and redeploy. The default API version is 202606;
 update `LINKEDIN_API_VERSION` as LinkedIn sunsets versions.
 
@@ -97,7 +116,7 @@ availability; the app connection must be tested with your actual account.
 ## Pinterest
 
 Use a Pinterest business account, register an app and request the required access.
-Set its exact callback to `https://www.motunrayoakinsete.com/api/pinterest`, then
+Set its exact callback to `https://www.motunrayoakinsete.com/api/pinterest/`, then
 add `PINTEREST_CLIENT_ID` and `PINTEREST_CLIENT_SECRET` to Vercel. Redeploy, choose
 Connect Pinterest and select a board in the studio. Create Pinterest pin publishes
 the approved post’s cover, title, description and website link. The current image
@@ -108,7 +127,7 @@ LinkedIn/Pinterest submissions use a persistent claim to prevent duplicate click
 If the provider’s response is ambiguous, check the platform before retrying. The
 studio does not automatically resubmit an uncertain publication. After verifying
 that nothing was published, the owner can clear the relevant claimed_at field in
-Supabase. Never clear it just because a network request timed out.
+your database. Never clear it just because a network request timed out.
 
 ## Substack
 
@@ -124,12 +143,15 @@ imported post to subscribers, use Substack’s publish/delivery controls.
 and pipeline retries using mocks, without paid API calls. Rebuild static pages with
 `npm run build` before a git push. Vercel deploys committed static pages and six
 Node functions. Source templates, SQL, tests, local screenshots and env files are
-excluded from static deployment. Keep backups of your Supabase database and images.
+excluded from static deployment. Keep backups of your database and images. PostgreSQL checks run locally with PGlite; provider requests are mocked. These tests do not prove real account delivery or permissions.
 
 Official documentation used:
 
 - [OpenAI web search](https://developers.openai.com/api/docs/guides/tools-web-search)
 - [OpenAI images](https://developers.openai.com/api/reference/resources/images/methods/generate)
+- [Neon serverless driver](https://github.com/neondatabase/serverless/blob/main/CONFIG.md)
+- [Vercel Blob SDK](https://vercel.com/docs/vercel-blob/using-blob-sdk)
+- [Claude structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)
 - [Supabase secret keys](https://supabase.com/docs/guides/getting-started/api-keys)
 - [Resend emails](https://resend.com/docs/api-reference/emails/send-email)
 - [LinkedIn Posts API](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api?view=li-lms-2026-06)
